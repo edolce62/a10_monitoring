@@ -1,0 +1,23 @@
+TODO:
+[ ] Add system.performance.get to A10LoadBalancer
+[ ] Add tests
+
+DONE:
+[X] Replace "--host HOST" with "--slb-host HOST[:PORT]", thread the port through
+    A10LoadBalancer and A10RestApi, and only set SSL options on the Net::HTTP
+    object if using port 443, or if --use-ssl option is included.
+[X] Write collect_a10_metrics.rb
+[X] Move common data-fetching code to new class (eg. `A10LoadBalancer`)
+    [X] Update check_a10_vserver
+    [X] Pass sleep_seconds in check_a10_vserver_bw, check_a10_link_bw
+    [-] Add verbose output to check_a10_vserver_bw
+    [X] Do not sleep during check_a10_vserver (don't need rate info)
+[X] Convert all hash keys from strings to symbols, or to OpenStruct
+[X] virtual_server, service_group, network.interface (and virtual_service) all
+    have both config data and stats data. Expose both. Is there a better way
+    to organize this data (ie. embed stats within overall config data)?
+    - Have both #get_foo_stats and #get_foo_config methods
+    - Make sure the hashes are keyed off of the object names, for easy lookup
+    - Make sure port data hashes are keyed off port numbers, for easy lookup
+[X] Handle broken pipe in query_a10_api.rb
+[X] Add version
