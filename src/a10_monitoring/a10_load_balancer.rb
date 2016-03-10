@@ -1,3 +1,7 @@
+# Copyright 2016 Yahoo Inc.
+# Licensed under the terms of the New-BSD license. Please see LICENSE file in
+# the project root for terms.
+
 #===============================================================================
 # The A10LoadBalancer class provides a high-level interface to A10 metrics. It
 # uses the A10RestApi internally to query the REST API. HTTP requests will be
