@@ -16,7 +16,7 @@ DESCRIPTION = <<-STR
 Generic script to query the A10 API and pretty-print the JSON results. Accepts a
 metric string and any number of parameters.
 
-Some useful metrics:
+Useful metrics:
 
     network.interface.get port_num=1
     network.interface.getAll
@@ -37,11 +37,16 @@ Statistics:
 
 STR
 
-EXAMPLES = <<-STR
--H <host> -m <method> [param=value] ...
+SYNOPSIS = <<-STR
+__APPNAME__ -s <slb>[:port] -m <method> [param=value] ...
 STR
 
-cli = CommandLine.new(:description => DESCRIPTION, :examples => EXAMPLES)
+EXAMPLES = <<-STR
+__APPNAME__ -s slb1.example.com:443 -m system.device_info.get
+__APPNAME__ -s slb1.example.com:443 -m network.interface.get port_num=1
+STR
+
+cli = CommandLine.new(:synopsis => SYNOPSIS, :description => DESCRIPTION, :examples => EXAMPLES)
 
 cli.option(:slb, '-s', '--slb HOST[:PORT]', "SLB host and port. Assumes port 80 if not specified.") do |v|
   v

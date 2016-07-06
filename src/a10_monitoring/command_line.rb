@@ -9,7 +9,7 @@ require 'optparse'
 #===============================================================================
 
 class CommandLine
-  attr_reader :appname, :description, :examples, :positional
+  attr_reader :appname, :synopsis, :description, :examples, :positional
   attr_reader :help
 
   # Initialize the CommandLine. Options include:
@@ -19,6 +19,7 @@ class CommandLine
   #
   def initialize(options = {})
     @appname = File.basename($0)
+    @synopsis = []
     @description = []
     @examples = []
     @options = {}
@@ -29,8 +30,14 @@ class CommandLine
         @help = true
       end
     end
+    self.synopsis    = options[:synopsis]    if options[:synopsis]
     self.description = options[:description] if options[:description]
     self.examples    = options[:examples]    if options[:examples]
+  end
+
+  # Set the application synopsis. String __APPNAME__ is replaced with the appname.
+  def synopsis=(str)
+    @synopsis = str.gsub('__APPNAME__', @appname).strip.split("\n").map { |s| "    #{s.rstrip}\n" }
   end
 
   # Set the application description
@@ -38,7 +45,7 @@ class CommandLine
     @description = str.strip.split("\n").map { |s| "    #{s.rstrip}\n" }
   end
 
-  # Set the application usage examples
+  # Set the application usage examples. String __APPNAME__ is replaced with the appname.
   def examples=(str)
     @examples = str.gsub('__APPNAME__', @appname).strip.split("\n").map { |s| "    #{s.rstrip}\n" }
   end
@@ -74,6 +81,10 @@ class CommandLine
   def usage
     str = "NAME\n"
     str += "    #@appname\n\n"
+    unless @synopsis.empty?
+      str += "SYNOPSIS\n"
+      str += @synopsis.join + "\n"
+    end
     unless @description.empty?
       str += "DESCRIPTION\n"
       str += @description.join + "\n"
