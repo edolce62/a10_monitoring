@@ -9,8 +9,8 @@ require 'optparse'
 #===============================================================================
 
 class CommandLine
-  attr_reader :appname, :synopsis, :description, :examples, :positional
-  attr_reader :help
+  attr_accessor :appname, :synopsis, :description, :commands, :examples,
+                :positional, :help
 
   # Initialize the CommandLine. Options include:
   #
@@ -18,11 +18,12 @@ class CommandLine
   #   :examples      Multi-line application usage examples.
   #
   def initialize(options = {})
-    @appname = File.basename($0)
-    @synopsis = []
+    @appname     = File.basename($0)
+    @synopsis    = []
     @description = []
-    @examples = []
-    @options = {}
+    @commands    = []
+    @examples    = []
+    @options     = {}
     @parser = OptionParser.new do |opts|
       opts.summary_width = 10
       opts.banner = ''
@@ -32,22 +33,34 @@ class CommandLine
     end
     self.synopsis    = options[:synopsis]    if options[:synopsis]
     self.description = options[:description] if options[:description]
+    self.commands    = options[:commands]    if options[:commands]
     self.examples    = options[:examples]    if options[:examples]
   end
 
-  # Set the application synopsis. String __APPNAME__ is replaced with the appname.
+  # Set the application synopsis
   def synopsis=(str)
-    @synopsis = str.gsub('__APPNAME__', @appname).strip.split("\n").map { |s| "    #{s.rstrip}\n" }
+    @synopsis = _parse_usage_string(str)
   end
 
   # Set the application description
   def description=(str)
-    @description = str.strip.split("\n").map { |s| "    #{s.rstrip}\n" }
+    @description = _parse_usage_string(str)
   end
 
-  # Set the application usage examples. String __APPNAME__ is replaced with the appname.
+  # Set the list of commands
+  def commands=(str)
+    @commands = _parse_usage_string(str)
+  end
+
+  # Set the application usage examples
   def examples=(str)
-    @examples = str.gsub('__APPNAME__', @appname).strip.split("\n").map { |s| "    #{s.rstrip}\n" }
+    @examples = _parse_usage_string(str)
+  end
+
+  # Helper method to parse an input string, replace __APPNAME__ with the app name,
+  # split into lines, and return an array of lines
+  def _parse_usage_string(str)
+    str.gsub('__APPNAME__', @appname).strip.split("\n").map { |s| "    #{s.rstrip}\n" }
   end
 
   # Add an option. Eg:
@@ -89,12 +102,16 @@ class CommandLine
       str += "DESCRIPTION\n"
       str += @description.join + "\n"
     end
+    unless @commands.empty?
+      str += "COMMANDS\n"
+      str += @commands.join + "\n"
+    end
+    str += "OPTIONS"
+    str += @parser.to_s.rstrip + "\n\n"
     unless @examples.empty?
       str += "EXAMPLES\n"
       str += @examples.join + "\n"
     end
-    str += "OPTIONS"
-    str += @parser.to_s.rstrip + "\n"
     str
   end
 

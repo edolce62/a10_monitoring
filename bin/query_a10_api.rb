@@ -22,7 +22,6 @@ Useful metrics:
     network.interface.getAll
     slb.service_group.getAll
     slb.virtual_server.getAll
-    slb.virtual_service.getAll
     system.device_info.cpu.current_usage.get
     system.device_info.get
     system.performance.get
@@ -33,7 +32,6 @@ Statistics:
     network.trunk.fetchAllStatistics
     slb.service_group.fetchAllStatistics
     slb.virtual_server.fetchAllStatistics
-    slb.virtual_service.fetchAllStatistics
 
 STR
 
