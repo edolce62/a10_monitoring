@@ -25,16 +25,16 @@ STR
 device        Show device info: cpu, disk, memory, power
 group         List service groups, or hosts in a group
 nic           List network interfaces
-vip           List VIPs, or hosts behind a VIP
+vserver       List vservers, or host groups behind a vserver
 STR
 
   EXAMPLES = <<-STR
-__APPNAME__ -s slb1.foo.com device         # List device info
-__APPNAME__ -s slb1.foo.com group          # List all service groups
-__APPNAME__ -s slb1.foo.com group bar      # List hosts in service group 'bar'
-__APPNAME__ -s slb1.foo.com nic            # List all NICs
-__APPNAME__ -s slb1.foo.com vip            # List all VIPs
-__APPNAME__ -s slb1.foo.com vip foo        # List hosts behind VIP 'foo'
+__APPNAME__ -s slb1.foo.com device          # List device info
+__APPNAME__ -s slb1.foo.com group           # List all service groups
+__APPNAME__ -s slb1.foo.com group NAME      # List hosts in service group
+__APPNAME__ -s slb1.foo.com nic             # List all NICs
+__APPNAME__ -s slb1.foo.com vserver         # List all vservers
+__APPNAME__ -s slb1.foo.com vserver NAME    # List host groups backing a vserver
 STR
 
   def initialize
@@ -66,11 +66,11 @@ STR
 
       # Run the proper command
       case command
-      when 'device' then A10CLI::Commands::Device.run(@cli)
-      when 'group'  then A10CLI::Commands::Group.run(@cli)
-      when 'nic'    then A10CLI::Commands::NIC.run(@cli)
-      when 'vip'    then A10CLI::Commands::VIP.run(@cli)
-      else          abort "a10cli: Unknown command '#{command}'"
+      when 'device'  then A10CLI::Commands::Device.run(@cli)
+      when 'group'   then A10CLI::Commands::Group.run(@cli)
+      when 'nic'     then A10CLI::Commands::NIC.run(@cli)
+      when 'vserver' then A10CLI::Commands::VServer.run(@cli)
+      else           abort "a10cli: Unknown command '#{command}'"
       end
 
     rescue Errno::EPIPE

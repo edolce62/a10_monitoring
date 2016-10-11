@@ -3,19 +3,19 @@
 # the project root for terms.
 
 #===============================================================================
-# 'group' command class. Shows service group info. For raw API output, use:
+# 'vserver' command class. Shows virtual server info, including the hosts
+# backing a virtual server. For raw API output, use:
 #
-#     sudo ./bin/query_a10_api.rb -s $SLB -m slb.service_group.getAll
 #     sudo ./bin/query_a10_api.rb -s $SLB -m slb.virtual_server.getAll
-#     sudo ./bin/query_a10_api.rb -s $SLB -m slb.virtual_server.fetchAllStatistics
+#     sudo ./bin/query_a10_api.rb -s $SLB -m slb.service_group.getAll
 #
 #===============================================================================
 
 module A10CLI
 module Commands
 
-class VIP
-  # Run the 'vip' command
+class VServer
+  # Run the 'vserver' command
   def self.run(cli)
     begin
       slb = A10LoadBalancer.new(cli.slb, sleep_sec: 1)
@@ -23,14 +23,12 @@ class VIP
 
       if cli.full
         results = get_full_results(slb)
-        raise RuntimeError, "vip not found: #{arg}" if arg && !results[arg]
+        raise RuntimeError, "vserver not found: #{arg}" if arg && !results[arg]
         results = results[arg] if arg
         puts results.to_yaml
       else
         if arg
-          get_hosts_behind_vip(slb, arg).each do |host, ports|
-            puts "%s %s" % [host, ports.sort.join(',')]
-          end
+          puts get_hosts_behind_vserver(slb, arg).to_yaml
         else
           puts slb.virtual_server_names.sort.join("\n")
         end
@@ -86,24 +84,23 @@ class VIP
     results
   end
 
-  # Get the list of hosts behind a given vip. Returns a hash from hostname to
-  # array of VIP ports.
-  def self.get_hosts_behind_vip(slb, name)
-    results = Hash.new { |h,k| h[k] = [] }
-    vips = slb.virtual_server_configs
+  # Get the list of hosts behind a given vserver. Returns a nested hash containing:
+  # { vserver => { port => hosts } }
+  def self.get_hosts_behind_vserver(slb, name)
+    results = {}
+    vservers = slb.virtual_server_configs
     groups = slb.service_group_configs
 
-    raise RuntimeError, "vip not found: #{name}" unless vips[name]
+    raise RuntimeError, "vserver not found: #{name}" unless vservers[name]
 
-    # For each port that the VIP serves, get the service group, extract the hosts
-    # behind the group, and add each host along with the VIP's port.
-    vips[name][:vport_list].each do |port,data|
+    # For each port that the vserver serves, get the service group, extract the
+    # hosts behind the group, and add each host along with the port.
+    vservers[name][:vport_list].each do |port,data|
       service_group = data[:service_group]
-      groups[service_group][:member_list].each do |m|
-        results[m[:server]] << port
-      end
+      hosts = groups[service_group][:member_list].map { |m| "#{m[:server]}:#{m[:port]}" }
+      results[port] = hosts
     end
-    results
+    { name => results }
   end
 end
 
