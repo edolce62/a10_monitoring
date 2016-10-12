@@ -52,8 +52,10 @@ class VServer
 
         # Fetch service group members
         members = []
-        groups[service_group][:member_list].each do |m|
-          members << '%s:%d' % [m[:server], m[:port]]
+        unless service_group.empty?
+          groups[service_group][:member_list].each do |m|
+            members << '%s:%d' % [m[:server], m[:port]]
+          end
         end
 
         # Construct port data
@@ -97,6 +99,7 @@ class VServer
     # hosts behind the group, and add each host along with the port.
     vservers[name][:vport_list].each do |port,data|
       service_group = data[:service_group]
+      raise RuntimeError, "vserver #{name} has no assigned service group" if service_group.empty?
       hosts = groups[service_group][:member_list].map { |m| "#{m[:server]}:#{m[:port]}" }
       results[port] = hosts
     end
