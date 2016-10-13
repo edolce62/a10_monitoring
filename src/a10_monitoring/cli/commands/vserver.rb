@@ -99,7 +99,7 @@ class VServer
     # hosts behind the group, and add each host along with the port.
     vservers[name][:vport_list].each do |port,data|
       service_group = data[:service_group]
-      raise RuntimeError, "vserver #{name} has no assigned service group" if service_group.empty?
+      raise RuntimeError, "vip #{name}:#{port} has no assigned service group" if service_group.empty?
       hosts = groups[service_group][:member_list].map { |m| "#{m[:server]}:#{m[:port]}" }
       results[port] = hosts
     end

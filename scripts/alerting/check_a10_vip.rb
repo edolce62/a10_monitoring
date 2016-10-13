@@ -79,22 +79,26 @@ begin
   raise ArgumentError, 'please specify warning threshold'  unless cli.warning_threshold
   raise ArgumentError, 'please specify critical threshold' unless cli.critical_threshold
 
-  vip_name, vip_port = cli.vip.split(':')
-  raise ArgumentError, 'port required in vip (name:port)'  unless vip_port
-  vip_port = Integer(vip_port) rescue raise(ArgumentError, "invalid port '#{vip_port}'")
+  vserver, port = cli.vip.split(':')
+  raise ArgumentError, 'port required in vip (name:port)'  unless port
+  port = Integer(port) rescue raise(ArgumentError, "invalid port '#{port}'")
 
   # Fetch vip data
   slb = A10LoadBalancer.new(cli.slb)
-  vserver = slb.virtual_server_configs[vip_name]
-  Icinga::quit(Icinga::UNKNOWN, "vserver '#{vip_name}' not found") unless vserver
+  vserver_conf = slb.virtual_server_configs[vserver]
+  Icinga::quit(Icinga::UNKNOWN, "vserver '#{vserver}' not found") unless vserver_conf
 
-  port_data = vserver[:vport_list][vip_port]
-  Icinga::quit(Icinga::UNKNOWN, "port #{vip_port} not found for vserver '#{vip_name}'") unless port_data
+  port_data = vserver_conf[:vport_list][port]
+  Icinga::quit(Icinga::UNKNOWN, "port #{port} not found for vserver '#{vserver}'") unless port_data
 
   # Get the service group and status
   group       = port_data[:service_group]
   status_code = port_data[:status]
   status_name = vserver_status_to_string(status_code)
+
+  if group.empty?
+    Icinga.quit(Icinga::CRITICAL, "vip #{cli.vip} has no assigned service group")
+  end
 
   # If not up, quit
   unless [:ALL_UP, :PARTIAL_UP, :FUNC_UP].include? status_name
