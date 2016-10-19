@@ -114,8 +114,9 @@ begin
   pct_up       = 100.0 * num_up.to_f / num_hosts
 
   # Return warning or critical if bad
-  servers_down = (servers_down.empty? ? 'none' : servers_down.join(', '))
-  message = "vip %s is %0.1f%% up (hosts down: %s)" % [cli.vip, pct_up, servers_down]
+  message = "vip %s has %d of %d hosts up (%0.0f%%)" % [cli.vip, num_up, num_hosts, pct_up]
+  message += ". Hosts down: #{servers_down.join(', ')}" unless servers_down.empty?
+
   Icinga.quit(Icinga::CRITICAL, message) if pct_up < cli.critical_threshold
   Icinga.quit(Icinga::WARNING,  message) if pct_up < cli.warning_threshold
   Icinga.quit(Icinga::OK,       message)
