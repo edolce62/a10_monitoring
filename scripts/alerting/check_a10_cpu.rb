@@ -34,6 +34,9 @@ end
 cli.option(:critical_threshold, '-c', '--critical PCT', 'Critical threshold, as percent (0-100)', 90) do |v|
   Float(v)
 end
+cli.option(:cpu_types, '-t' , '--cpu-types LIST', 'CPU types, as a csv list. Accepted values: data, mgmt.', 'data,mgmt') do |v|
+  v
+end
 cli.option(:verbose, '-v', '--verbose', "Enable verbose output, including backtraces.") do
   true
 end
@@ -55,6 +58,15 @@ begin
   raise ArgumentError, 'please specify warning threshold'  unless cli.warning_threshold
   raise ArgumentError, 'please specify critical threshold' unless cli.critical_threshold
 
+  cpu_types      = cli.cpu_types.split(',').map(&:to_sym)
+  check_data_cpu = cpu_types.include? :data
+  check_mgmt_cpu = cpu_types.include? :mgmt
+
+  cpu_types.each do |type|
+    raise ArgumentError, "invalid CPU type '#{type}'" unless [:data,:mgmt].include? type
+  end
+  raise ArgumentError, "no CPU type specified" unless check_data_cpu || check_mgmt_cpu
+
   # Create the SLB object
   slb  = A10LoadBalancer.new(cli.slb)
   warn = cli.warning_threshold
@@ -71,10 +83,10 @@ begin
   end
 
   # Return the proper status
-  Icinga.quit(Icinga::CRITICAL, "data CPU usage is %0.1f%%" % slb.data_cpu_avg) if slb.data_cpu_avg > crit
-  Icinga.quit(Icinga::CRITICAL, "mgmt CPU usage is %0.1f%%" % slb.mgmt_cpu_avg) if slb.mgmt_cpu_avg > crit
-  Icinga.quit(Icinga::WARNING,  "data CPU usage is %0.1f%%" % slb.data_cpu_avg) if slb.data_cpu_avg > warn
-  Icinga.quit(Icinga::WARNING,  "mgmt CPU usage is %0.1f%%" % slb.mgmt_cpu_avg) if slb.mgmt_cpu_avg > warn
+  Icinga.quit(Icinga::CRITICAL, "data CPU usage is %0.1f%%" % slb.data_cpu_avg) if check_data_cpu && slb.data_cpu_avg > crit
+  Icinga.quit(Icinga::CRITICAL, "mgmt CPU usage is %0.1f%%" % slb.mgmt_cpu_avg) if check_mgmt_cpu && slb.mgmt_cpu_avg > crit
+  Icinga.quit(Icinga::WARNING,  "data CPU usage is %0.1f%%" % slb.data_cpu_avg) if check_data_cpu && slb.data_cpu_avg > warn
+  Icinga.quit(Icinga::WARNING,  "mgmt CPU usage is %0.1f%%" % slb.mgmt_cpu_avg) if check_mgmt_cpu && slb.mgmt_cpu_avg > warn
   Icinga.quit(Icinga::OK, "CPU usage ok (data: %0.1f%%, mgmt: %0.1f%%)" % [slb.data_cpu_avg, slb.mgmt_cpu_avg])
 
 rescue => e
